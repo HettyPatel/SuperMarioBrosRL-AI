@@ -72,7 +72,7 @@ if __name__ == '__main__':
         
         
         #TODO Import settings from config file later 
-        agent = DQNAgent(state_dim, action_dim, buffer_size=200000, batch_size=128, lr=0.0001, gamma=0.99, episilon=1.0, episilon_decay=0.999, min_episilon=0.01)
+        agent = DQNAgent(state_dim, action_dim, buffer_size=1000000, batch_size=128, lr=0.0001, gamma=0.99, episilon=1.0, episilon_decay=0.999, min_episilon=0.01)
         
         num_episodes = 500
         
