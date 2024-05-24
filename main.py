@@ -12,11 +12,11 @@ import pandas as pd
 import numpy as np 
 import logging
 from agents.DeepQAgent import DQNAgent   
+from gym.wrappers import ResizeObservation
 
 #append the path to the sys path
 logging.basicConfig(filename='training_log.log', level=logging.INFO, format='%(asctime)s - %(message)s')
-
-
+    
 def save_checkpoint(agent, level, episode, in_game_time_left):
     model_dir = 'checkpoints'
     if not os.path.exists(model_dir):
@@ -31,7 +31,7 @@ def save_checkpoint(agent, level, episode, in_game_time_left):
 if __name__ == '__main__':
     # levels to beat for speedrun
     
-    metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left', 'epsilon'])
+    metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
     
     #train an agent on the following levels. 
     levels = ["SuperMarioBros-1-1-v0",
@@ -47,9 +47,20 @@ if __name__ == '__main__':
     best_times = {level: 0 for level in levels}
     
     
+    #create a csv 
+    csv_file_path = 'metrics.csv'
+    if os.path.exists(csv_file_path):
+        metrics_df = pd.read_csv(csv_file_path)
+    else:
+        metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
+
+    
+    
     for level in levels:
         # create the environment
         env = create_mario_env(level, render_mode='human')
+        env = ResizeObservation(env, shape=84)
+        #env = FrameStack(env, num_stack=4)
         
         state_dim = np.prod(env.observation_space.shape) # number of states
         action_dim = env.action_space.n # number of actions
@@ -79,10 +90,12 @@ if __name__ == '__main__':
                 next_state = np.reshape(next_state, [1, state_dim])
                 
                 #print("next state shape", next_state.shape)
-                print("time left in the level", info['time'])
+                #print("time left in the level", info['time'])
                 
                 if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
                     reward += 1000
+                else:
+                    reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun 
                     
                 agent.store_experience(state, action, reward, next_state, done)
                 loss = agent.train()
@@ -96,15 +109,13 @@ if __name__ == '__main__':
             
             in_game_time_left = info['time']
             
-            logging.info(f"Level: {level}, Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}, Epsilon: {agent.epsilon:.4f}")
             
-            metrics = {'level': level, 'episode': episode, 'total_reward': total_reward, 'avg_loss': avg_loss, 'steps': step_count, 'in_game_time_left': in_game_time_left, 'epsilon': agent.epsilon}
-            metrics_df = metrics_df.append(metrics, ignore_index=True)
+            metrics = {'level': level, 'episode': episode, 'total_reward': total_reward, 'avg_loss': avg_loss, 'steps': step_count, 'in_game_time_left': in_game_time_left}
+            new_metrics_df = pd.DataFrame([metrics])
+            metrics_df = pd.concat([metrics_df, new_metrics_df], ignore_index=True)
             
-            
-            
-            
-            print(f"Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}, Epsilon: {agent.epsilon:.4f}")
+            logging.info(f"Level: {level}, Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
+            print(f"Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
             
             
             if in_game_time_left > best_times[level]:
@@ -116,7 +127,8 @@ if __name__ == '__main__':
             
         env.close()
         
-                
+    metrics_df.to_csv(csv_file_path, index=False)
+
            
     
             

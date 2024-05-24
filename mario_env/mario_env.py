@@ -6,7 +6,7 @@ import gym
 from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 
 
-def create_mario_env(level_name, render_mode='human'):
+def create_mario_env(level_name, render_mode):
     '''
     Create a mario environment with the given level name
     '''
