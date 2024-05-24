@@ -103,15 +103,24 @@ if __name__ == '__main__':
                 #print("next state shape", next_state.shape)
                 #print("time left in the level", info['time'])
                 
-                if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
-                    reward += 1000
-                else:
-                    reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun 
+                # reward function edit
+                
+                # if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
+                #     reward += 1000
+                # else:
+                #     reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun \
+                        
+                # # if mario dies then give a penalty of -1000
+                # if done:
+                #     if info.get('flag_get', False) == False:
+                #         reward -= 1000
+                        
                     
                 agent.store_experience(state, action, reward, next_state, done)
                 loss = agent.train()
                 if loss is not None:
                     total_loss += loss
+                
                 total_reward += reward
                 state = next_state
                 step_count += 1
@@ -133,7 +142,7 @@ if __name__ == '__main__':
             #     best_times[level] = in_game_time_left
             #     save_checkpoint(agent, level, episode, in_game_time_left)
                 
-            if episode % 10 == 0:
+            if episode % 100 == 0:
                 metrics_df.to_csv('metrics.csv', index=False)
                 save_checkpoint(agent, level, episode, in_game_time_left) # save the checkpoint every 10 episodes
         env.close()
