@@ -122,13 +122,14 @@ if __name__ == '__main__':
             logging.info(f"Level: {level}, Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
             print(f"Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
             
-            
-            if in_game_time_left > best_times[level] and info.get('flag_get', False) == True:
-                best_times[level] = in_game_time_left
-                save_checkpoint(agent, level, episode, in_game_time_left)
+            #chaged this just in case it doesn't reach the flag in 500 episodes
+            # if in_game_time_left > best_times[level] and info.get('flag_get', False) == True:
+            #     best_times[level] = in_game_time_left
+            #     save_checkpoint(agent, level, episode, in_game_time_left)
                 
         if episode % 10 == 0:
             metrics_df.to_csv('metrics.csv', index=False)
+            save_checkpoint(agent, level, episode, in_game_time_left) # save the checkpoint every 10 episodes
             
         env.close()
         
