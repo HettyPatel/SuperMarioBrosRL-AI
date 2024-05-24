@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np 
 import logging
 from agents.DeepQAgent import DQNAgent   
-from gym.wrappers import ResizeObservation
+from gym.wrappers import ResizeObservation, GrayScaleObservation, FrameStack
 
 #append the path to the sys path
 logging.basicConfig(filename='training_log.log', level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -53,18 +53,24 @@ if __name__ == '__main__':
     
     
     #create a csv 
-    csv_file_path = 'metrics.csv'
-    if os.path.exists(csv_file_path):
-        metrics_df = pd.read_csv(csv_file_path)
-    else:
-        metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
+    
 
     
     
     for level in levels:
+        
+        csv_file_path = f'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\checkpoints{level}\metrics.csv'
+        
+        if os.path.exists(csv_file_path):
+            metrics_df = pd.read_csv(csv_file_path)
+        else:
+            metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
+        
+        
         # create the environment
         env = create_mario_env(level, render_mode='human')
         env = ResizeObservation(env, shape=84)
+        env = GrayScaleObservation(env)
         #env = FrameStack(env, num_stack=4)
         
         state_dim = np.prod(env.observation_space.shape) # number of states
@@ -74,7 +80,7 @@ if __name__ == '__main__':
         #TODO Import settings from config file later 
         agent = DQNAgent(state_dim, action_dim, buffer_size=1000000, batch_size=128, lr=0.0001, gamma=0.99, episilon=1.0, episilon_decay=0.999, min_episilon=0.01)
         
-        num_episodes = 500
+        num_episodes = 1000
         
         for episode in range(num_episodes):
             state = env.reset()[0]
@@ -127,12 +133,10 @@ if __name__ == '__main__':
             #     best_times[level] = in_game_time_left
             #     save_checkpoint(agent, level, episode, in_game_time_left)
                 
-        if episode % 10 == 0:
-            metrics_df.to_csv('metrics.csv', index=False)
-            save_checkpoint(agent, level, episode, in_game_time_left) # save the checkpoint every 10 episodes
-            
+            if episode % 10 == 0:
+                metrics_df.to_csv('metrics.csv', index=False)
+                save_checkpoint(agent, level, episode, in_game_time_left) # save the checkpoint every 10 episodes
         env.close()
-        
     metrics_df.to_csv(csv_file_path, index=False)
 
            
