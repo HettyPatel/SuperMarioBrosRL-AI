@@ -1,1 +1,17 @@
 2024-05-23 20:55:56,467 - Level: SuperMarioBros-1-1-v0, Episode: 0, Total Reward: -1194.0, Average Loss: 1012.7670, Steps: 1350, In-Game Time Left: 333
+2024-05-23 21:07:06,305 - Level: SuperMarioBros-1-1-v0, Episode: 0, Total Reward: -7813.0, Average Loss: 426.7933, Steps: 8019, In-Game Time Left: 0
+2024-05-23 21:07:43,689 - Level: SuperMarioBros-1-1-v0, Episode: 1, Total Reward: -391.0, Average Loss: 322.7567, Steps: 1080, In-Game Time Left: 346
+2024-05-23 21:07:43,730 - Checkpoint saved: checkpoints\model_SuperMarioBros-1-1-v0_ep1_346s.pth
+2024-05-23 21:07:52,888 - Level: SuperMarioBros-1-1-v0, Episode: 2, Total Reward: -73.0, Average Loss: 17.5383, Steps: 266, In-Game Time Left: 387
+2024-05-23 21:07:52,924 - Checkpoint saved: checkpoints\model_SuperMarioBros-1-1-v0_ep2_387s.pth
+2024-05-23 21:08:25,114 - Level: SuperMarioBros-1-1-v0, Episode: 3, Total Reward: -154.0, Average Loss: 9501.4850, Steps: 928, In-Game Time Left: 354
+2024-05-23 21:08:32,340 - Level: SuperMarioBros-1-1-v0, Episode: 4, Total Reward: 11.0, Average Loss: 229.6646, Steps: 204, In-Game Time Left: 390
+2024-05-23 21:08:32,379 - Checkpoint saved: checkpoints\model_SuperMarioBros-1-1-v0_ep4_390s.pth
+2024-05-23 21:08:51,708 - Level: SuperMarioBros-1-1-v0, Episode: 5, Total Reward: -348.0, Average Loss: 306.4617, Steps: 558, In-Game Time Left: 373
+2024-05-23 21:08:59,799 - Level: SuperMarioBros-1-1-v0, Episode: 6, Total Reward: -40.0, Average Loss: 118.0812, Steps: 234, In-Game Time Left: 389
+2024-05-23 21:13:42,582 - Level: SuperMarioBros-1-1-v0, Episode: 7, Total Reward: -7216.0, Average Loss: 390.2458, Steps: 7994, In-Game Time Left: 0
+2024-05-23 21:14:37,246 - Level: SuperMarioBros-1-1-v0, Episode: 8, Total Reward: -1297.0, Average Loss: 37196.3862, Steps: 1406, In-Game Time Left: 330
+2024-05-23 21:14:53,520 - Level: SuperMarioBros-1-1-v0, Episode: 9, Total Reward: -354.0, Average Loss: 928.8337, Steps: 440, In-Game Time Left: 378
+2024-05-23 21:19:44,141 - Level: SuperMarioBros-1-1-v0, Episode: 10, Total Reward: -7927.0, Average Loss: 451.5124, Steps: 8133, In-Game Time Left: 0
+2024-05-23 21:20:55,234 - Level: SuperMarioBros-1-1-v0, Episode: 11, Total Reward: -1238.0, Average Loss: 1606.1367, Steps: 1970, In-Game Time Left: 308
+2024-05-23 21:21:48,372 - Level: SuperMarioBros-1-1-v0, Episode: 12, Total Reward: -748.0, Average Loss: 679.2694, Steps: 1468, In-Game Time Left: 327

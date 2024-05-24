@@ -19,9 +19,14 @@ logging.basicConfig(filename='training_log.log', level=logging.INFO, format='%(a
     
 def save_checkpoint(agent, level, episode, in_game_time_left):
     model_dir = 'checkpoints'
+    level_dir = os.path.join(model_dir, level)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
-    checkpoint_path = os.path.join(model_dir, f'model_{level}_ep{episode}_{in_game_time_left}s.pth')
+    
+    if not os.path.exists(level_dir):
+        os.makedirs(level_dir)
+        
+    checkpoint_path = os.path.join(level_dir, f"checkpoint_{episode}_{in_game_time_left}.pth")
     torch.save(agent.q_network.state_dict(), checkpoint_path)
     logging.info(f"Checkpoint saved: {checkpoint_path}")
 
@@ -35,10 +40,10 @@ if __name__ == '__main__':
     
     #train an agent on the following levels. 
     levels = ["SuperMarioBros-1-1-v0",
-              "SuperMarioBros-1-1-v0",
+              "SuperMarioBros-1-2-v0",
               "SuperMarioBros-4-1-v0",
               "SuperMarioBros-4-2-v0",
-             "SuperMarioBros-8-1-v0",
+              "SuperMarioBros-8-1-v0",
               "SuperMarioBros-8-2-v0",
               "SuperMarioBros-8-3-v0",
               "SuperMarioBros-8-4-v0"
@@ -118,7 +123,7 @@ if __name__ == '__main__':
             print(f"Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
             
             
-            if in_game_time_left > best_times[level]:
+            if in_game_time_left > best_times[level] and info.get('flag_get', False) == True:
                 best_times[level] = in_game_time_left
                 save_checkpoint(agent, level, episode, in_game_time_left)
                 
