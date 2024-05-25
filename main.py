@@ -59,7 +59,8 @@ if __name__ == '__main__':
     
     for level in levels:
         
-        csv_file_path = f'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\checkpoints{level}\metrics.csv'
+        csv_file_path = f'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\checkpoints\{level}\metrics.csv'
+
         
         if os.path.exists(csv_file_path):
             metrics_df = pd.read_csv(csv_file_path)
@@ -105,10 +106,10 @@ if __name__ == '__main__':
                 
                 # reward function edit
                 
-                # if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
-                #     reward += 1000
-                # else:
-                #     reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun \
+                if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
+                    reward += 1000
+                else:
+                    reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun \
                         
                 # # if mario dies then give a penalty of -1000
                 # if done:
@@ -143,7 +144,7 @@ if __name__ == '__main__':
             #     save_checkpoint(agent, level, episode, in_game_time_left)
                 
             if episode % 100 == 0:
-                metrics_df.to_csv('metrics.csv', index=False)
+                metrics_df.to_csv(csv_file_path, index=False)
                 save_checkpoint(agent, level, episode, in_game_time_left) # save the checkpoint every 10 episodes
         env.close()
     metrics_df.to_csv(csv_file_path, index=False)
