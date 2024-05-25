@@ -59,7 +59,10 @@ if __name__ == '__main__':
     
     for level in levels:
         
-        csv_file_path = f'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\checkpoints\{level}\metrics.csv'
+        csv_file_path = f'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\csv_files'
+        csv_file_path = os.path.join(csv_file_path, f"{level}.csv")
+        
+
 
         
         if os.path.exists(csv_file_path):
