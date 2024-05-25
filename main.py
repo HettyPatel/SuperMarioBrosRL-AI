@@ -84,7 +84,7 @@ if __name__ == '__main__':
         #TODO Import settings from config file later 
         agent = DQNAgent(state_dim, action_dim, buffer_size=1000000, batch_size=128, lr=0.0001, gamma=0.99, episilon=1.0, episilon_decay=0.999, min_episilon=0.01)
         
-        num_episodes = 1000
+        num_episodes = 500
         
         for episode in range(num_episodes):
             state = env.reset()[0]
@@ -109,10 +109,10 @@ if __name__ == '__main__':
                 
                 # reward function edit
                 
-                if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
-                    reward += 1000
-                else:
-                    reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun \
+                # if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
+                #     reward += 1000
+                # else:
+                #     reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun \
                         
                 # # if mario dies then give a penalty of -1000
                 # if done:
