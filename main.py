@@ -10,6 +10,7 @@ import time
 import torch
 import pandas as pd 
 import numpy as np 
+import gym
 import logging
 from agents.DeepQAgent import DQNAgent   
 from gym.wrappers import ResizeObservation, GrayScaleObservation, FrameStack
@@ -17,20 +18,59 @@ from gym.wrappers import ResizeObservation, GrayScaleObservation, FrameStack
 #append the path to the sys path
 logging.basicConfig(filename='training_log.log', level=logging.INFO, format='%(asctime)s - %(message)s')
     
+import shutil
+
 def save_checkpoint(agent, level, episode, in_game_time_left):
     model_dir = 'checkpoints'
     level_dir = os.path.join(model_dir, level)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
-    
     if not os.path.exists(level_dir):
         os.makedirs(level_dir)
-        
+
     checkpoint_path = os.path.join(level_dir, f"checkpoint_{episode}_{in_game_time_left}.pth")
-    torch.save(agent.q_network.state_dict(), checkpoint_path)
+    checkpoint_data = {
+        'episode': episode,
+        'model_state_dict': agent.q_network.state_dict(),
+        'optimizer_state_dict': agent.optimizer.state_dict(),
+        'epsilon': agent.episilon,
+        'in_game_time_left': in_game_time_left
+    }
+    torch.save(checkpoint_data, checkpoint_path)
     logging.info(f"Checkpoint saved: {checkpoint_path}")
 
+    # Update the 'latest_checkpoint.pth' by copying the checkpoint file
+    latest_checkpoint_path = os.path.join(level_dir, 'latest_checkpoint.pth')
+    shutil.copy(checkpoint_path, latest_checkpoint_path)
+    
+def load_checkpoint(agent, level, checkpoint_path):
+    if os.path.exists(checkpoint_path):
+        checkpoint = torch.load(checkpoint_path)
+        agent.q_network.load_state_dict(checkpoint['model_state_dict'])
+        agent.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        agent.episilon = checkpoint['epsilon']
+        return checkpoint['episode'], checkpoint['in_game_time_left']
+    else:
+        return 0, 0  # If no checkpoint exists, start from scratch
 
+
+class SkipFrames(gym.Wrapper):
+    def __init__(self, env, skip):
+        
+        gym.Wrapper.__init__(self, env)
+        self._skip = skip
+
+    def step(self, action):
+        total_reward = 0.0
+        done = None
+        
+        for _ in range(self._skip):
+            state, reward, done, trunc, info = self.env.step(action)
+            total_reward += reward
+            
+            if done:
+                break
+        return state, total_reward, done, trunc, info
 
 
 if __name__ == '__main__':
@@ -54,9 +94,6 @@ if __name__ == '__main__':
     
     #create a csv 
     
-
-    
-    
     for level in levels:
         
         csv_file_path = f'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\csv_files'
@@ -73,6 +110,7 @@ if __name__ == '__main__':
         
         # create the environment
         env = create_mario_env(level, render_mode='human')
+        env = SkipFrames(env, skip=4)
         env = ResizeObservation(env, shape=84)
         env = GrayScaleObservation(env)
         #env = FrameStack(env, num_stack=4)
@@ -84,7 +122,14 @@ if __name__ == '__main__':
         #TODO Import settings from config file later 
         agent = DQNAgent(state_dim, action_dim, buffer_size=500000, batch_size=128, lr=0.0001, gamma=0.99, episilon=1.0, episilon_decay=0.999, min_episilon=0.01)
         
-        num_episodes = 500
+        num_episodes = 100001
+        
+        # load checkpoint path
+        checkpoint_path = os.path.join('checkpoints', level, 'latest_checkpoint.pth')
+        start_episode, in_game_time_left = load_checkpoint(agent, level, checkpoint_path)
+        
+        
+        
         
         for episode in range(num_episodes):
             state = env.reset()[0]
@@ -109,14 +154,14 @@ if __name__ == '__main__':
                 
                 # reward function edit
                 
-                # if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
-                #     reward += 1000
-                # else:
-                #     reward -= 1 # if the flag is not reached then give a penalty of -1 for speedrun \
+                if info.get('flag_get', False): # if the flag is reached then give a reward of 1000
+                    reward += 1000 
+                else:
+                    reward -= 0.1 # if the flag is not reached then give a penalty of -1 for speedrun \
                         
-                # # if mario dies then give a penalty of -1000
+                # if mario dies then give a penalty of -1000
                 # if done:
-                #     if info.get('flag_get', False) == False:
+                #     if info.get('flag_get', False) == False: # if mario dies then give a penalty of -1000
                 #         reward -= 1000
                         
                     
@@ -146,9 +191,15 @@ if __name__ == '__main__':
             #     best_times[level] = in_game_time_left
             #     save_checkpoint(agent, level, episode, in_game_time_left)
                 
-            if episode % 100 == 0:
+            if episode % 1000 == 0:
                 metrics_df.to_csv(csv_file_path, index=False)
-                save_checkpoint(agent, level, episode, in_game_time_left) # save the checkpoint every 10 episodes
+                save_checkpoint(agent, level, episode, in_game_time_left)
+                # update the latest checkpoint pth to latest saved checkpoint
+                latest_checkpoint_path = os.path.join('checkpoints', level, 'latest_checkpoint.pth')
+                if os.path.exists(latest_checkpoint_path):
+                    os.remove(latest_checkpoint_path)
+                os.symlink(f'checkpoint_{episode}_{in_game_time_left}.pth', latest_checkpoint_path)
+                
         env.close()
     metrics_df.to_csv(csv_file_path, index=False)
 
