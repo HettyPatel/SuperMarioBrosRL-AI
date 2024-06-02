@@ -14,15 +14,16 @@ class DDQNAgent:
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
         self.min_epsilon = min_epsilon
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda")
         
         self.memory = ReplayBuffer(buffer_size)
         self.q_network = ConvQNetwork(input_size, action_dim).to(self.device)
         self.target_network = ConvQNetwork(input_size, action_dim).to(self.device)
         self.target_network.load_state_dict(self.q_network.state_dict())
         self.optimizer = torch.optim.Adam(self.q_network.parameters(), lr=lr)
-        
     
+    
+        
     # picking an action
     # select random action at first, then select the best action depending on the epsilon value
     
@@ -40,7 +41,8 @@ class DDQNAgent:
         
     # store the experience in the replay buffer
     def store_experience(self, state, action, reward, next_state, done):
-        self.memory.add(state, action, reward, next_state, done)
+        clipped_reward = np.clip(reward, -15, 15)
+        self.memory.add(state, action, clipped_reward, next_state, done)
         
         
     def train(self):
@@ -77,17 +79,17 @@ class DDQNAgent:
             # optimize the model
             self.optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), max_norm=1.0)
             self.optimizer.step()
             
             self.soft_update()
             
             return loss.item()
         
-            
-        
     def soft_update(self):
+        tau = 0.001
         for target_param, local_param in zip(self.target_network.parameters(), self.q_network.parameters()):
-            target_param.data.copy_(0.001 * local_param.data + (1 - 0.001) * target_param.data)
+            target_param.data.copy_(tau * local_param.data + (1 - tau) * target_param.data)
             
     def update_epsilon(self):
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)

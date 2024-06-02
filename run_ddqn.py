@@ -47,14 +47,14 @@ def load_checkpoint(agent, level, checkpoint_path):
     if os.path.exists(checkpoint_path):
         checkpoint = torch.load(checkpoint_path)
         agent.q_network.load_state_dict(checkpoint['model_state_dict'])
-        agent.target_network.load_state_dict(checkpoint['model_target_state_dict'])  # corrected typo here
+        agent.target_network.load_state_dict(checkpoint['model_target_state_dict']) 
         agent.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        agent.epsilon = checkpoint['epsilon']  # corrected typo here
+        agent.epsilon = checkpoint['epsilon']
+        #agent.epsilon = 0.3  # Set epsilon to 0.35 to start from the checkpoint # changing the epsilon value to 0.35 from checkpoint
         return checkpoint['episode'], checkpoint['in_game_time_left']
     else:
         return 0, 0  # If no checkpoint exists, start from scratch
-
-
+    
 class SkipFrames(gym.Wrapper):
     def __init__(self, env, skip):
         
@@ -76,14 +76,14 @@ class SkipFrames(gym.Wrapper):
 
 metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
 
-levels = ["SuperMarioBros-1-1-v0",
-          "SuperMarioBros-1-2-v0",
-           "SuperMarioBros-4-1-v0",
-            "SuperMarioBros-4-2-v0",
-            "SuperMarioBros-8-1-v0",
-            "SuperMarioBros-8-2-v0",
-            "SuperMarioBros-8-3-v0",
-           "SuperMarioBros-8-4-v0"
+levels = ["SuperMarioBros-1-1-v3",
+          #"SuperMarioBros-1-2-v0",
+           #"SuperMarioBros-4-1-v0",
+           # "SuperMarioBros-4-2-v0",
+           #"SuperMarioBros-8-1-v0",
+          #  "SuperMarioBros-8-2-v0",
+           # "SuperMarioBros-8-3-v0",
+           #"SuperMarioBros-8-4-v0"
             ]
 
 for level in levels:
@@ -107,13 +107,13 @@ for level in levels:
     in_size = (1, 84, 84)
   
     
-    agent = DDQNAgent(in_size, action_dim, buffer_size=500000, batch_size=64, lr=0.00025, gamma=0.99, epsilon=1.0, epsilon_decay=0.999, min_epsilon=0.1)
-    num_episodes = 1000
+    agent = DDQNAgent(in_size, action_dim, buffer_size=500000, batch_size=64, lr=0.0001, gamma=0.99, epsilon=1.0, epsilon_decay=0.9995, min_epsilon=0.01)
+    num_episodes = 40001
     
     checkpoint_path = os.path.join('checkpoints', 'DDQN', level, 'latest_checkpoint.pth')
     start_episode, in_game_time_left = load_checkpoint(agent, level, checkpoint_path)
     
-    for episode in range(num_episodes):
+    for episode in range(start_episode, num_episodes):
         state = env.reset()[0]
         state = np.expand_dims(state, axis=0)
         
@@ -129,6 +129,13 @@ for level in levels:
             next_state, reward, done, trunc, info = env.step(action)
             next_state = np.expand_dims(next_state, axis=0)
             #print("next state shape", next_state.shape)
+            
+            if done:
+                if info.get('flag_get', False):
+                   reward += 1000
+                   
+                if not info.get('flag_get', False):
+                    reward -= 0.1
             
             agent.store_experience(state, action, reward, next_state, done)
             loss = agent.train()
@@ -146,7 +153,7 @@ for level in levels:
             
         agent.epsilon = max(agent.min_epsilon, agent.epsilon * agent.epsilon_decay)
         logging.info(f"Episode: {episode}, Total Reward: {total_reward}, Steps: {step_count}, Epsilon: {agent.epsilon}")
-        print(f"Episode: {episode}, Total Reward: {total_reward}, Steps: {step_count}, Epsilon: {agent.epsilon}")
+        print(f"Episode: {episode}, Total Reward: {total_reward}, Steps: {step_count}, Epsilon: {agent.epsilon}, Avg Loss: {avg_loss}")
         metrics = {'level': level, 'episode': episode, 'total_reward': total_reward, 'avg_loss': avg_loss, 'steps': step_count, 'in_game_time_left': in_game_time_left}
         new_metrics_df = pd.DataFrame([metrics])
         metrics_df = pd.concat([metrics_df, new_metrics_df], ignore_index=True)

@@ -8,14 +8,14 @@ import numpy as np
 
 # Class for Deep Q-Learning Agent
 class DQNAgent:
-    def __init__(self, state_dim, action_dim, buffer_size, batch_size, lr, gamma, episilon, episilon_decay, min_episilon):
+    def __init__(self, state_dim, action_dim, buffer_size, batch_size, lr, gamma, epsilon, epsilon_decay, min_epsilon):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.batch_size = batch_size
         self.gamma = gamma
-        self.episilon = episilon
-        self.episilon_decay = episilon_decay
-        self.min_episilon = min_episilon
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.min_epsilon = min_epsilon
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         self.memory = ReplayBuffer(buffer_size)
@@ -24,11 +24,11 @@ class DQNAgent:
         
     
     # picking an action
-    # select random action at first, then select the best action depending on the episilon value
+    # select random action at first, then select the best action depending on the epsilon value
     
     def select_action(self, state):
-        # if a random number between 0 and 1 is less than the episilon, then select a random action
-        if np.random.rand() < self.episilon: 
+        # if a random number between 0 and 1 is less than the epsilon, then select a random action
+        if np.random.rand() < self.epsilon: 
             return np.random.choice(self.action_dim) # select a random action
         
         # if it is not then take the best action from the q_network based on the highest q value
@@ -91,7 +91,7 @@ class DQNAgent:
         self.optimizer.step()
         
         # decay the episilon value or keep it at the minimum value
-        self.episilon = max(self.episilon * self.episilon_decay, self.min_episilon)
+        self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
         
         return loss.item()
         

@@ -33,7 +33,7 @@ def save_checkpoint(agent, level, episode, in_game_time_left):
         'episode': episode,
         'model_state_dict': agent.q_network.state_dict(),
         'optimizer_state_dict': agent.optimizer.state_dict(),
-        'epsilon': agent.episilon,
+        'epsilon': agent.epsilon,
         'in_game_time_left': in_game_time_left
     }
     torch.save(checkpoint_data, checkpoint_path)
@@ -48,7 +48,7 @@ def load_checkpoint(agent, level, checkpoint_path):
         checkpoint = torch.load(checkpoint_path)
         agent.q_network.load_state_dict(checkpoint['model_state_dict'])
         agent.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        agent.episilon = checkpoint['epsilon']
+        agent.epsilon = checkpoint['epsilon']
         return checkpoint['episode'], checkpoint['in_game_time_left']
     else:
         return 0, 0  # If no checkpoint exists, start from scratch
@@ -78,8 +78,8 @@ class SkipFrames(gym.Wrapper):
 metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
 
 #train an agent on the following levels. 
-levels = ["SuperMarioBros-1-1-v0",
-            "SuperMarioBros-1-2-v0",
+levels = [#"SuperMarioBros-1-1-v0",
+            #"SuperMarioBros-1-2-v0",
             "SuperMarioBros-4-1-v0",
             "SuperMarioBros-4-2-v0",
             "SuperMarioBros-8-1-v0",
@@ -88,7 +88,7 @@ levels = ["SuperMarioBros-1-1-v0",
             "SuperMarioBros-8-4-v0"
 ]
 
-best_times = {level: 0 for level in levels}
+
 
 
 #create a csv 
@@ -117,18 +117,16 @@ for level in levels:
     
     
     #TODO Import settings from config file later 
-    agent = DQNAgent(state_dim, action_dim, buffer_size=500000, batch_size=128, lr=0.0001, gamma=0.99, episilon=1.0, episilon_decay=0.999, min_episilon=0.01)
+    agent = DQNAgent(state_dim, action_dim, buffer_size=500000, batch_size=128, lr=0.0001, gamma=0.99, epsilon=1.0, epsilon_decay=0.999, min_epsilon=0.05)
     
-    num_episodes = 1000
+    num_episodes = 2001
     
-    # load checkpoint path
-    checkpoint_path = os.path.join('checkpoints', 'DQN' ,level, 'latest_checkpoint.pth')
+    # load checkpoint path if it exists
+    checkpoint_path = os.path.join('checkpoints', 'DQN', level, 'latest_checkpoint.pth')
     start_episode, in_game_time_left = load_checkpoint(agent, level, checkpoint_path)
     
     
-    
-    
-    for episode in range(num_episodes):
+    for episode in range(start_episode, num_episodes):
         state = env.reset()[0]
         state = np.reshape(state, [1, state_dim])
         #print("flattned shape", state.shape)
@@ -183,25 +181,24 @@ for level in levels:
         logging.info(f"Level: {level}, Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
         print(f"Episode: {episode}, Total Reward: {total_reward}, Average Loss: {avg_loss:.4f}, Steps: {step_count}, In-Game Time Left: {in_game_time_left}")
         
-        #chaged this just in case it doesn't reach the flag in 500 episodes
-        # if in_game_time_left > best_times[level] and info.get('flag_get', False) == True:
-        #     best_times[level] = in_game_time_left
-        #     save_checkpoint(agent, level, episode, in_game_time_left)
-            
         if episode % 100 == 0:
             metrics_df.to_csv(csv_file_path, index=False)
             save_checkpoint(agent, level, episode, in_game_time_left)
-            # update the latest checkpoint pth to latest saved checkpoint
-            latest_checkpoint_path = os.path.join('checkpoints', level, 'latest_checkpoint.pth')
+            
+            # Update the latest checkpoint to the latest saved checkpoint
+            checkpoint_dir = os.path.join('checkpoints', 'DQN', level)
+            latest_checkpoint_path = os.path.join(checkpoint_dir, 'latest_checkpoint.pth')
+            checkpoint_filename = f'checkpoint_{episode}_{in_game_time_left}.pth'
+            checkpoint_path = os.path.join(checkpoint_dir, checkpoint_filename)
+            
             if os.path.exists(latest_checkpoint_path):
                 os.remove(latest_checkpoint_path)
-            os.symlink(f'checkpoint_{episode}_{in_game_time_left}.pth', latest_checkpoint_path)
             
+            # Copy the checkpoint file to latest_checkpoint.pth
+            shutil.copy(checkpoint_path, latest_checkpoint_path)
+        
     env.close()
-metrics_df.to_csv(csv_file_path, index=False)
-
-           
-    
+      
             
               
             
