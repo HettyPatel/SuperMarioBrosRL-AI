@@ -1,6 +1,7 @@
 import os
 import gym
 import torch
+import time
 import numpy as np
 from mario_env.mario_env import create_mario_env
 from agents.DDQNAgent import DDQNAgent
@@ -50,7 +51,7 @@ action_dim = env.action_space.n
 agent = DDQNAgent(state_dim, action_dim, buffer_size=1000, batch_size=32, lr=0.00025, gamma=0.99, epsilon=1, epsilon_decay=0.999, min_epsilon=0.1)
 
 # Load the agent from checkpoint
-checkpoint_path = 'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\checkpoints\DDQN\SuperMarioBros-1-1-v0\latest_checkpoint.pth'
+checkpoint_path = 'H:\Code\Super Mario Bros AI\SuperMarioBrosRL-AI\checkpoints\DDQN FINISHD\DDQN\SuperMarioBros-1-1-v0\latest_checkpoint.pth'
 load_checkpoint(agent, checkpoint_path)
 
 # Run the agent
@@ -63,6 +64,7 @@ step_count = 0
 
 num_episodes = 100
 success_count = 0
+framedelay = 0.009
 
 for episode in range(num_episodes):
     state = env.reset()[0]
@@ -77,14 +79,15 @@ for episode in range(num_episodes):
         if done:
             if info.get('flag_get', False):
                 success_count += 1
-                time = info['time']
-                print("time to complete the level:", 400-time)
-                print("Success count:", success_count)        
+                #time = info['time']
+                #print("time to complete the level:", 400-time)
+                #print("Success count:", success_count)        
         
             
         state = next_state
         total_reward += reward
         step_count += 1
+        time.sleep(framedelay)
         if done:
             break
     

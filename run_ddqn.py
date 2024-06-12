@@ -67,6 +67,15 @@ class SkipFrames(gym.Wrapper):
         
         for _ in range(self._skip):
             state, reward, done, trunc, info = self.env.step(action)
+            
+            if info.get('is_going_down_pipe', False):
+                print("Going down the pipe reward + 1000")
+                reward += 1000
+            
+            if info.get('is_entering_reversed_L_pipe', False):
+                print("Entering reversed L pipe reward + 1000")
+                reward += 1000
+                
             total_reward += reward
             
             if done:
@@ -76,7 +85,7 @@ class SkipFrames(gym.Wrapper):
 
 metrics_df = pd.DataFrame(columns=['level', 'episode', 'total_reward', 'avg_loss', 'steps', 'in_game_time_left'])
 
-levels = ["SuperMarioBros-1-1-v3",
+levels = ["SuperMarioBros-1-1-v0",
           #"SuperMarioBros-1-2-v0",
            #"SuperMarioBros-4-1-v0",
            # "SuperMarioBros-4-2-v0",
@@ -96,7 +105,7 @@ for level in levels:
         
     
     env = create_mario_env(level, render_mode='human')
-    env = SkipFrames(env, skip=4)
+    env = SkipFrames(env, skip=8)
     env = ResizeObservation(env, shape=84)
     env = GrayScaleObservation(env)
     #env = gym.wrappers.FrameStack(env, num_stack=4)
@@ -107,7 +116,7 @@ for level in levels:
     in_size = (1, 84, 84)
   
     
-    agent = DDQNAgent(in_size, action_dim, buffer_size=500000, batch_size=64, lr=0.0001, gamma=0.99, epsilon=1.0, epsilon_decay=0.9995, min_epsilon=0.01)
+    agent = DDQNAgent(in_size, action_dim, buffer_size=500000, batch_size=64, lr=0.0001, gamma=0.99, epsilon=1.0, epsilon_decay=0.99995, min_epsilon=0.05)
     num_episodes = 40001
     
     checkpoint_path = os.path.join('checkpoints', 'DDQN', level, 'latest_checkpoint.pth')
@@ -129,14 +138,27 @@ for level in levels:
             next_state, reward, done, trunc, info = env.step(action)
             next_state = np.expand_dims(next_state, axis=0)
             #print("next state shape", next_state.shape)
+            # if done:
+            #     if info.get('flag_get', False):
+            #         print("Flag get reward + 1000")
+            #         reward += 1000
+                   
+            # # if not info.get('flag_get', False):
+            # #     reward -= 0.1
+            # if info.get('is_going_down_pipe', False):
+            #     print("Going down the pipe reward + 1000")
+            #     #reward += 1000
+                
+            # #print("info", info)
             
             if done:
-                if info.get('flag_get', False):
-                   reward += 1000
-                   
-                if not info.get('flag_get', False):
-                    reward -= 0.1
+                reward += info.get('x_pos', 0)
+                #print("addeed x_pos to reward", info.get('x_pos', 0))
+            # if info.get('is_entering_reversed_L_pipe', False):
+            #     print("Entering reversed L pipe reward + 1000")
+            #     #reward += 1000
             
+            #print("reward", reward)
             agent.store_experience(state, action, reward, next_state, done)
             loss = agent.train()
             if loss is not None:
